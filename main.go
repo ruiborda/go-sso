@@ -40,10 +40,13 @@ const indexTemplate = `<!DOCTYPE html>
         <p><span class="font-semibold">Verified Email:</span> {{.User.VerifiedEmail}}</p>
       </div>
     {{else}}
-      <h1 class="text-3xl font-bold mb-6 text-center text-indigo-600">Iniciar sesión con Google</h1>
-      <div class="flex justify-center">
-        <a href="/login" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded inline-flex items-center">
+      <h1 class="text-3xl font-bold mb-6 text-center text-indigo-600">Iniciar sesión</h1>
+      <div class="flex flex-col space-y-4 items-center">
+        <a href="/login" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded inline-flex items-center w-64 justify-center">
           <span>Iniciar sesión con Google</span>
+        </a>
+        <a href="/github.login" class="bg-gray-800 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded inline-flex items-center w-64 justify-center">
+          <span>Iniciar sesión con GitHub</span>
         </a>
       </div>
     {{end}}
@@ -55,18 +58,22 @@ var (
 	// Parseamos la plantilla una sola vez
 	tmpl = template.Must(template.New("index").Parse(indexTemplate))
 	
-	// Servicio de autenticación de Google
+	// Servicios de autenticación
 	googleAuth *service.GoogleAuthService
+	githubAuth *service.GitHubAuthService
 )
 
 func main() {
-	// Inicializar el servicio de autenticación de Google
+	// Inicializar los servicios de autenticación
 	googleAuth = service.NewGoogleAuthService()
+	githubAuth = service.NewGitHubAuthService()
 	
 	// Configurar las rutas
 	http.HandleFunc("/", serveIndexPage)
 	http.HandleFunc("/login", handleGoogleLogin)
 	http.HandleFunc("/callback", handleGoogleCallback)
+	http.HandleFunc("/github.login", handleGithubLogin)
+	http.HandleFunc("/github.callback", handleGithubCallback)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -98,7 +105,29 @@ func handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("Información del usuario:", user.Name, user.Email)
+	fmt.Println("Información del usuario de Google:", user.Name, user.Email)
+	
+	// Renderizamos la plantilla con .User poblado
+	if err := tmpl.Execute(w, TemplateData{User: user}); err != nil {
+		http.Error(w, "Error al renderizar la plantilla con datos de usuario", http.StatusInternalServerError)
+	}
+}
+
+// handleGithubLogin redirige al flujo OAuth de GitHub
+func handleGithubLogin(w http.ResponseWriter, r *http.Request) {
+	url := githubAuth.GetAuthURL()
+	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+}
+
+// handleGithubCallback procesa el callback de GitHub y renderiza la plantilla con datos de usuario
+func handleGithubCallback(w http.ResponseWriter, r *http.Request) {
+	user, err := githubAuth.HandleCallback(r)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error en el callback de GitHub: %v", err), http.StatusBadRequest)
+		return
+	}
+
+	fmt.Println("Información del usuario de GitHub:", user.Name, user.Email)
 	
 	// Renderizamos la plantilla con .User poblado
 	if err := tmpl.Execute(w, TemplateData{User: user}); err != nil {
