@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login con Google</title>
+</head>
+<body>
+<h1>Iniciar sesión con Google</h1>
+<button onclick="loginWithGoogle()">Login</button>
+<div id="userInfo"></div>
+
+<script>
+    function loginWithGoogle() {
+        const width = 500;
+        const height = 600;
+        const left = window.screenX + (window.innerWidth - width) / 2;
+        const top = window.screenY + (window.innerHeight - height) / 2;
+
+        window.open(
+            '/login',
+            'Login con Google',
+            `width=${width},height=${height},left=${left},top=${top}`
+        );
+    }
+
+    setInterval(() => {
+       const userInfo=localStorage.getItem("userInfo")
+        if (userInfo) {
+            console.log(userInfo)
+            // clear
+            localStorage.removeItem("userInfo")
+        }
+    }, 3000);
+</script>
+
+</body>
+</html>
