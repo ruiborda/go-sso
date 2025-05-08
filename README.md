@@ -1,109 +1,76 @@
-# Go-SSO: Single Sign-On Service in Go
+# Go-SSO: Servicio de Inicio de Sesión Único (SSO) en Go Github y Google OAuth2
 
-This is a simple Single Sign-On (SSO) service built in Go that supports authentication through Google and GitHub OAuth2 providers.
+Este es un servicio simple de Inicio de Sesión Único (SSO) desarrollado en Go que permite la autenticación mediante los
+proveedores OAuth2 de Google y GitHub.
 
-## Features
+## Características
 
-- Authentication with Google OAuth2
-- Authentication with GitHub OAuth2
-- Simple responsive web interface using Tailwind CSS
-- Display of user profile information after successful login
-- Profile picture conversion to base64 for embedding
+- Autenticación con Google OAuth2
+- Autenticación con GitHub OAuth2
+- Interfaz web simple y responsiva usando Tailwind CSS
+- Muestra de información del perfil del usuario tras el inicio de sesión exitoso
+- Conversión de imagen de perfil a base64 para incrustarla
 
-## Prerequisites
+## Requisitos Previos
 
-- Go 1.16 or newer
-- OAuth2 credentials for Google and GitHub (client ID and client secret)
+- docker y docker compose
 
-## Installation
+Debes configurar las credenciales OAuth2 tanto para Google como para GitHub:
 
-1. Clone this repository:
+### Configuración de Google OAuth2
+
+1. Ve a [Google Cloud Console](https://console.cloud.google.com/)
+2. Crea un nuevo proyecto o selecciona uno existente
+3. Navega a "APIs y servicios" > "Credenciales"
+4. Haz clic en "Crear credenciales" > "ID de cliente de OAuth"
+5. Configura la pantalla de consentimiento
+6. Establece el tipo de aplicación como "Aplicación web"
+7. Agrega `http://localhost:8080/callback` a las URI de redirección autorizadas
+8. Copia el ID de cliente y el secreto de cliente generados
+
+### Configuración de GitHub OAuth2
+
+1. Ve a [GitHub Crear Nueva App](https://github.com/settings/apps/new)
+2. Llena el nombre de la aplicación de GitHub
+3. Llena la URL de la página principal
+4. Llena la URL de redirección de autorización con `http://localhost:8080/github.callback`
+5. Desactiva la casilla "Activo" del Webhook
+6. En Permisos > selecciona "Cualquier cuenta"
+7. Haz clic en "Crear aplicación de GitHub"
+
+## Ejecución de la Aplicación
+
+1. Clona este repositorio:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/ruiborda/go-sso
    cd go-sso
    ```
-
-2. Install dependencies:
+2. Configurar Variables de entorno, crear un archivo `.env` en la raíz del proyecto
    ```bash
-   go mod download
+   cp example.env .env
    ```
 
-## Configuration
-
-You need to set up OAuth2 credentials for both Google and GitHub:
-
-### Google OAuth2 Setup
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project or select an existing one
-3. Navigate to "APIs & Services" > "Credentials"
-4. Click "Create Credentials" > "OAuth Client ID"
-5. Configure the consent screen
-6. Set the application type to "Web Application"
-7. Add `http://localhost:8080/callback` to the authorized redirect URIs
-8. Copy the generated client ID and client secret
-
-### GitHub OAuth2 Setup
-
-1. Go to [GitHub Developer Settings](https://github.com/settings/developers)
-2. Click on "New OAuth App"
-3. Fill in the application details
-4. Set the Homepage URL to `http://localhost:8080`
-5. Set the Authorization callback URL to `http://localhost:8080/github.callback`
-6. Register the application
-7. Copy the generated client ID and client secret
-
-## Running the Application
-
-### Using the Provided Script
-
-The easiest way to run the application is using the provided `run.sh` script, which sets up the required environment variables:
-
-```bash
-# Make the script executable
-chmod +x run.sh
-
-# Run the application
-./run.sh
-```
-
-### Running Manually
-
-If you prefer to set up the environment variables manually:
-
-1. Configure the required environment variables:
+2. Build the Docker image:
    ```bash
-   export GOOGLE_CLIENT_ID="your-google-client-id"
-   export GOOGLE_CLIENT_SECRET="your-google-client-secret"
-   export GOOGLE_REDIRECT_URL="http://localhost:8080/callback"
-   
-   export GITHUB_CLIENT_ID="your-github-client-id"
-   export GITHUB_CLIENT_SECRET="your-github-client-secret"
-   export GITHUB_REDIRECT_URL="http://localhost:8080/github.callback"
+   docker compose build
+   docker compose up -d
    ```
 
-2. Run the application:
-   ```bash
-   go run main.go
-   ```
+## Configuración
 
-## Usage
+## Uso
 
-1. Open your browser and navigate to `http://localhost:8080`
-2. You'll see a login page with options to log in with Google or GitHub
-3. Click on your preferred login method
-4. Authorize the application to access your profile data
-5. After successful authentication, you'll be redirected back to the application where your profile information will be displayed
+1. Abre tu navegador y navega a `http://localhost:8080`
+2. Verás una página de inicio de sesión con opciones para iniciar sesión con Google o GitHub
+3. Haz clic en el método de inicio de sesión que prefieras
+4. Autoriza a la aplicación para acceder a los datos de tu perfil
+5. Tras una autenticación exitosa, serás redirigido nuevamente a la aplicación donde se mostrará la información de tu
+   perfil
 
-## Project Structure
+## Estructura del Proyecto
 
-- `main.go`: The main application file that sets up the HTTP server and routes
-- `service/google_auth.go`: Implementation of the Google OAuth2 authentication service
-- `service/github_auth.go`: Implementation of the GitHub OAuth2 authentication service
-- `run.sh`: Script to easily run the application with required environment variables
+- `main.go`: Archivo principal de la aplicación que configura el servidor HTTP y las rutas
+- `service/google_auth.go`: Implementación del servicio de autenticación con Google OAuth2
+- `service/github_auth.go`: Implementación del servicio de autenticación con GitHub OAuth2
+- `run.sh`: Script para ejecutar fácilmente la aplicación con las variables de entorno necesarias
 
-## Security Notes
-
-- This application uses a fixed state string for OAuth2 flow. In a production environment, you should generate a random state string for each authorization request.
-- Sensitive information like client secrets should not be committed to version control. Consider using a secure vault or environment variables for production deployments.
-- This is a demonstration project and may require additional security measures for production use.
